@@ -2,9 +2,9 @@
 
 Repository: https://github.com/necat101/c-stdlib-strtod-numeric-ingestion-lab
 Implementation SHA: 7d5dacc2143d8cf3c9afc08a164a9b78de2cf0c0
-Documentation SHA: bf87d4fe375df3c8464960b9825cd9114fe9fe03
+Documentation SHA: (see git log – this file was added in a direct descendant of the implementation commit and may be amended to correct the recorded SHA)
 
-Parent: documentation commit is direct descendant of implementation commit, changes only VERIFY.md
+Parent: documentation commit is direct descendant of implementation commit, changes only VERIFY.md (plus any subsequent SHA-correction amends).
 
 ## Clean-clone verification
 
@@ -59,52 +59,40 @@ actual_classification totals:
 - not_applicable: 25
 - fail: 0
 
-Key observations (local libc):
-- decimal_full: 42.125, full consumption, errno 0
-- leading_space: -12.5, signbit set
-- trailing_junk: offset 4, suffix "xyz", strict policy rejects
-- no_conversion: endptr==start, conversion 0
-- overflow: inf + ERANGE
-- underflow: 0 + ERANGE
-- signed_zero: signbit 1
-- nan: isnan true, strict policy rejects
-- inf: isinf true both signs, strict policy rejects
-- hex_float: 0x1.8p+1 → 3.0
-- c_locale: "1.5" OK, "1,5" partial
-- comma_locale: not found → locale_skip (2 rows)
-- halfway: FE_TONEAREST, ties-to-even observed
-- long_zero: 256 leading zeros + "1.25" → 1.25
-- bounded_parser: 1999/1999 success, 1999/1999 strtod full, 1999/1999 scaled recovery match
-- threshold: 6 tokens, naive vs strict policies differ on 3 tokens
-
 JSON, CSV, RESULTS counts agree: yes (100 rows)
+
 Committed vs regenerated: identical except elapsed_s timing fields
-Timing normalization: elapsed_s differs (~0.27s → ~1.43s), documented, acceptable
-Working tree after regeneration: RESULTS.md, results_rows.csv, results_rows.json (elapsed_s only)
-Restoration: timing-only changes, documented, no data differences
-Final git status --porcelain: M RESULTS.md M results_rows.csv M results_rows.json
-Artifact scanner: test_lab.TestLab.test_artifact_scanner – PASS (checks all 11 required artifacts, HN evidence excludes responsive-design, README has HN section with thread ID, .gitignore covers exe)
-Verification wall-clock: ~8s
 
-toolchain_skips: 0
-locale_skips: 2
-format_skips: 0
-failures: 0
+Timing normalization: elapsed_s differs between runs (expected). The committed results_rows.json contains timing from the original run.
 
-Post-VERIFY unittest rerun: 17 tests OK
+Working-tree changes after regeneration: RESULTS.md, results_rows.csv, results_rows.json – **elapsed_s fields only**. No token, offset, errno, classification, or conclusion differences.
 
-## Implementation notes (v2 repair)
+Final git status --porcelain after regeneration (before restoration): 
+```
+ M RESULTS.md
+ M results_rows.csv
+ M results_rows.json
+```
 
-This is a repaired implementation addressing prior review feedback:
+Restoration: timing-only changes were **not** restored before recording the above status. To get a clean tree, run `git checkout HEAD -- RESULTS.md results_rows.csv results_rows.json`.
 
-- cases.json: full expectation map per case/method (was ID-only)
-- run_lab.py: 5 independent handlers, never read expected_classification; missing outcome → fail
-- zig discovery: exact spec order
-- result fields: populated from actual helper observations
-- RESULTS.md: generated SOLELY from row collection
-- test_lab.py: 17 tests with independent recomputation, real artifact scanner
-- HN evidence: responsive-design / Firefox discussion excluded
-- prohibited paths: removed, zig_exe sanitized to /portable-zig
-- classifications: independent (2 locale_skip mismatches vs expected, correct)
+Normalized comparison command: not performed – a full field-by-field comparison excluding elapsed_s was not run. The diff was inspected manually and showed only elapsed_s changes.
 
-Clean-clone verification of 7d5dacc passed. All 100 rows reproducible.
+Artifact scanner: `test_lab.TestLab.test_artifact_scanner` – **partial**. Checks that 11 required files exist and are nonempty, that README contains "Hacker News" and "41501625", that `hn_thread_evidence.md` excludes responsive-design / Firefox / Ctrl+ discussion, and that `.gitignore` covers the `strtod_lab` executable. It does **NOT** scan every file's complete contents, nor check for credentials, tokens, private keys, session IDs, email addresses, full tracebacks with local paths, or environment dumps.
+
+## Known limitations (v2)
+
+- Result row fields: partially populated from helper observations; several fields are hard-coded or null (exact_equality, comparison_target, errno_before, restricted_parser_hundredths, per-token threshold labels/validity/rejection reasons/policy differences, DBL_MAX/DBL_MIN, rejection_count). See README "What this lab actually does" for full list.
+- Classifications: handlers do not read `expected_classification` (independent), but several branches return fixed results based on case ID without fully validating the underlying observation (e.g. infinity case).
+- Test suite: 17 tests with independent recomputation for decimal parsing, trailing junk offsets, overflow state, bounded-parser domain size, threshold policy decisions, JSON/CSV agreement. **Missing**: expectation-mutation independence test, no-Zig isolated-environment test, missing-handler-result test, independent stale-errno / midpoint-rounding tests, exhaustive regeneration of all 1,999 bounded-parser tokens, independent checking of every rejection token, complete threshold-label recomputation. The overflow test can pass based on row classification rather than requiring actual overflow evidence.
+- Artifact scanner: partial – see above.
+- Threshold-policy per-token results, restricted-parser rejection details, stale-errno both-call observations, infinity both-sign observations, locale decimal-point strings, rounding-mode restoration – emitted by the C helper but not all recorded in `results_rows.json`.
+- VERIFY.md documentation SHA self-reference: this file records the implementation SHA accurately (7d5dacc), but the documentation SHA field is a known bootstrapping problem – see git log for the exact commit containing this file version.
+
+## Summary
+
+Clean-clone verification of implementation commit 7d5dacc: the lab compiles, runs, produces 100 deterministic rows with the reported classification distribution, and 17 tests pass. All 100 rows are reproducible (only elapsed_s differs).
+
+However – see "Known limitations" above. In particular: incomplete observation field population, partial classification validation, partial test coverage, partial artifact scanning, no normalized comparison command run, working tree not restored to clean before recording final status, and VERIFY.md documentation SHA bootstrapping issue.
+
+The repository contains a substantive C implementation exercising real `strtod()` behavior, a restricted two-decimal parser with exhaustive 1999-token testing, and well-attributed HN discussion documentation – but the evidence harness is incomplete, and "clean-clone verified" / "real artifact scanner" claims would overstate what is demonstrated. This VERIFY.md attempts to describe the actual state honestly.
