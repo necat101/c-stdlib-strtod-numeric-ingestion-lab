@@ -230,15 +230,22 @@ for case_id, expectations in cases.items():
         if expected is None:
             expected = "fail"
         handler = handlers[method]
-        actual, fail_reason = handler(case_id, obs, c_ok)
+        actual, note = handler(case_id, obs, c_ok)
         # if handler didn't assign, fail
         if actual is None:
             actual = "fail"
-            fail_reason = fail_reason or "handler returned no classification"
+            note = note or "handler returned no classification"
         skip_reason = None
-        if actual in ("locale_skip","format_skip","toolchain_skip"):
-            skip_reason = fail_reason
-            fail_reason = None
+        failure_reason = None
+        conclusion = obs.get("conclusion")
+        if actual == "fail":
+            failure_reason = note
+        elif actual in ("locale_skip","format_skip","toolchain_skip"):
+            skip_reason = note
+        else:
+            # non-fail, non-skip: put note in conclusion if no existing conclusion
+            if note and not conclusion:
+                conclusion = note
         # build row with all required fields
         row = {
 "method": method,
@@ -302,8 +309,8 @@ for case_id, expectations in cases.items():
 "elapsed_s": round(time.perf_counter() - t0, 6),
 "sanitization_applied": True,
 "skip_reason": skip_reason,
-"failure_reason": fail_reason,
-"conclusion": obs.get("conclusion"),
+"failure_reason": failure_reason,
+"conclusion": conclusion,
         }
         rows.append(row)
 

@@ -22,7 +22,7 @@ classification totals:
 - not_applicable: 25
 - fail: 0
 
-elapsed: 0.322s
+elapsed: 0.292s
 
 ## observations
 - zig_compiler_marker: token=None parsed=None full=None errno=None
