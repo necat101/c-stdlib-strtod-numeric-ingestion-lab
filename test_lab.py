@@ -113,7 +113,7 @@ class TestLab(unittest.TestCase):
             self.assertNotIn("/home/ubuntu/.local", txt, f"{path} contains prohibited path")
     def test_artifact_scanner(self):
         # real artifact scanner - checks all required files exist and have content, no prohibited patterns
-        required = ["README.md","RESULTS.md","cases.json","results_rows.json","results_rows.csv","strtod_lab.c","run_lab.py","test_lab.py","hn_thread_evidence.md","hn_comments_sanitized.json",".gitignore"]
+        required = ["README.md","RESULTS.md","cases.json","results_rows.json","results_rows.csv","strtod_lab.c","run_lab.py","test_lab.py","run.sh","run.bat","hn_thread_evidence.md","hn_comments_sanitized.json",".gitignore"]
         for p in required:
             pp = ROOT/p
             self.assertTrue(pp.exists(), f"missing {p}")
