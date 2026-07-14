@@ -1,0 +1,10 @@
+strtod_lab
+strtod_lab.exe
+strtod_lab_check
+strtod_lab_check.exe
+*.o
+*.obj
+zig-cache/
+.zig-cache/
+__pycache__/
+*.pyc
